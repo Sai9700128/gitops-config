@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: sample-app
-          image: nginx:latest
+          image: 599138915215.dkr.ecr.us-east-1.amazonaws.com/gitops-app:5423ba4d7e149519e6bf0555f94becd41627894c
           ports:
             - containerPort: 3000
           env:
