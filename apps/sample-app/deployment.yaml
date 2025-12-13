@@ -5,7 +5,7 @@ metadata:
   labels:
     app: sample-app
 spec:
-  replicas: 8
+  replicas: 2
   selector:
     matchLabels:
       app: sample-app
@@ -15,7 +15,29 @@ spec:
         app: sample-app
     spec:
       containers:
-        - name: nginx
+        - name: sample-app
           image: nginx:latest
           ports:
-            - containerPort: 80
+            - containerPort: 3000
+          env:
+            - name: APP_VERSION
+              value: "1.0.0"
+          resources:
+            requests:
+              cpu: "64m"
+              memory: "128Mi"
+            limits:
+              cpu: "128m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
