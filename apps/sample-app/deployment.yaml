@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: sample-app
-          image: 599138915215.dkr.ecr.us-east-1.amazonaws.com/gitops-app:5423ba4d7e149519e6bf0555f94becd41627894c
+          image: 599138915215.dkr.ecr.us-east-1.amazonaws.com/gitops-app:425a7f9c2c6fa657aaba19e5f7f6d7c39afccdf5
           ports:
             - containerPort: 3000
           env:
