@@ -1,0 +1,31 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/GITHUB_USERNAME/taskflow/user-service
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 3001
+
+env:
+  NODE_ENV: production
+  PORT: "3001"
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_NAME: users_db
+  DB_USER: root
+  JWT_EXPIRES_IN: "7d"
+
+secrets:
+  dbPassword: rootpassword
+  jwtSecret: your-super-secret-jwt-key
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi

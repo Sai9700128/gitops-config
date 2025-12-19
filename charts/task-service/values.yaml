@@ -1,0 +1,31 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/GITHUB_USERNAME/taskflow/task-service
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 3002
+
+env:
+  NODE_ENV: production
+  PORT: "3002"
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_NAME: tasks_db
+  DB_USER: root
+  USER_SERVICE_URL: http://user-service:3001
+
+secrets:
+  dbPassword: rootpassword
+  jwtSecret: your-super-secret-jwt-key
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
