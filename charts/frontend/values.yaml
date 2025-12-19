@@ -1,8 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/GITHUB_USERNAME/taskflow/frontend
-  tag: latest
+  repository: 599138915215.dkr.ecr.us-east-1.amazonaws.com/taskflow-frontend
+  tag: a0f6a9632a2c64a7fe6e2e2dac3ec2d0e6e89a0c
   pullPolicy: Always
 
 service:
