@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+  labels:
+    {{- include "user-service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "user-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "user-service.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+          env:
+            - name: NODE_ENV
+              value: {{ .Values.env.NODE_ENV | quote }}
+            - name: PORT
+              value: {{ .Values.env.PORT | quote }}
+            - name: DB_HOST
+              value: {{ .Values.env.DB_HOST | quote }}
+            - name: DB_PORT
+              value: {{ .Values.env.DB_PORT | quote }}
+            - name: DB_NAME
+              value: {{ .Values.env.DB_NAME | quote }}
+            - name: DB_USER
+              value: {{ .Values.env.DB_USER | quote }}
+            - name: JWT_EXPIRES_IN
+              value: {{ .Values.env.JWT_EXPIRES_IN | quote }}
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secret
+                  key: db-password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Chart.Name }}-secret
+                  key: jwt-secret
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
