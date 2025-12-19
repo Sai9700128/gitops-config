@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: 599138915215.dkr.ecr.us-east-1.amazonaws.com/taskflow-task-service
-  tag: aba952fe1ada6430df55b85ebea2e73c6cefe375
+  tag: 3ebd8d05ed8f159f074596dc4e166c77c981e156
   pullPolicy: Always
 
 service:
