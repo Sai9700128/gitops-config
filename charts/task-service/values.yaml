@@ -1,8 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: ghcr.io/GITHUB_USERNAME/taskflow/task-service
-  tag: latest
+  repository: 599138915215.dkr.ecr.us-east-1.amazonaws.com/taskflow-task-service
+  tag: aba952fe1ada6430df55b85ebea2e73c6cefe375
   pullPolicy: Always
 
 service:
