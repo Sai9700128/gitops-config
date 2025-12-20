@@ -12,10 +12,10 @@ service:
 env:
   NODE_ENV: production
   PORT: "3001"
-  DB_HOST: mysql
+  DB_HOST: gitops-demo-mysql.caduqm82wpsb.us-east-1.rds.amazonaws.com:3306
   DB_PORT: "3306"
   DB_NAME: users_db
-  DB_USER: root
+  DB_USER: admin
   JWT_EXPIRES_IN: "7d"
 
 secrets:
