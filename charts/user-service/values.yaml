@@ -1,8 +1,8 @@
 replicaCount: 1
 
 image:
-  repository: PLACEHOLDER
-  tag: latest
+  repository: 599138915215.dkr.ecr.us-east-1.amazonaws.com/taskflow-user-service
+  tag: 9ebdd3066dd540d062f4653356c4b60119c1d03d
   pullPolicy: Always
 
 service:
