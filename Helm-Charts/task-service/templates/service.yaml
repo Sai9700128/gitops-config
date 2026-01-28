@@ -4,4 +4,8 @@ metadata:
   name: mysql
 spec:
   type: ExternalName
+<<<<<<< HEAD
   externalName: {{ .Values.service.externalName | default "mysql.default.svc.cluster.local" }}
+=======
+  externalName: mysql.default.svc.cluster.local
+>>>>>>> 754ba02 (updating files according to the helm)

@@ -1,7 +1,22 @@
 apiVersion: v1
 kind: Service
 metadata:
+<<<<<<< HEAD
   name: mysql
 spec:
   type: ExternalName
   externalName: {{ .Values.service.externalName | default "mysql.default.svc.cluster.local" }}
+=======
+  name: {{ include "user-service.fullname" . }}
+  labels:
+    {{- include "user-service.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "user-service.selectorLabels" . | nindent 4 }}
+>>>>>>> 754ba02 (updating files according to the helm)
