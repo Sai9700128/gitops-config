@@ -4,4 +4,4 @@ metadata:
   name: mysql
 spec:
   type: ExternalName
-  externalName: mysql.default.svc.cluster.local
+  externalName: {{ .Values.service.externalName | default "mysql.default.svc.cluster.local" }}
