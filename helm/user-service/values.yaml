@@ -9,7 +9,7 @@ replicaCount: 1
 image:
   repository: 599138915215.dkr.ecr.us-east-1.amazonaws.com/taskflow-user-service
   # This sets the pull policy for images.
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
   # Overrides the image tag whose default is the chart appVersion.
   tag: 4f153b3f4c4b6bf72b81c83eae3f1a2bfe0b4036
 
