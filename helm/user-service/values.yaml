@@ -55,7 +55,7 @@ service:
   type: ExternalName
   # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
   port: 3001
-  externalName:
+  externalName: gitops-demo-mysql.caduqm82wpsb.us-east-1.rds.amazonaws.com:3306
 
 env:
   NODE_ENV: production
