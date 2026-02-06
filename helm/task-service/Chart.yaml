@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: v2
 name: task-service
 description: Task-Service for managing tasks and to-do items.
 
