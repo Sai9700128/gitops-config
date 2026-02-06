@@ -1,4 +1,4 @@
-apiVersion: v1
+apiVersion: v2
 name: front-end
 description: Front-end Service Helm Chart for Kubernetes
 
