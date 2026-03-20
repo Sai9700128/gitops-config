@@ -1,7 +1,9 @@
 apiVersion: templates.gatekeeper.sh/v1
 kind: ConstraintTemplate
 metadata:
-  name: k8snolatestag
+  name: k8sallowedregistries
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"    
 spec:
   crd:
     spec:
