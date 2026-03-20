@@ -1,0 +1,10 @@
+# This base helm chat is used to deny all communication which doesn't have any pods
+
+# so basically we are denying all the communication by default......so we will not be having any communication until we specify the ingress and egress in the network policies???
+
+apiVersion: v2
+name: base
+description: Namespace-wide configurations and policies
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
