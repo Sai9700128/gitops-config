@@ -1,2 +1,4 @@
 # Base configuration
 namespace: default
+networkPolicy:
+  enabled: true
