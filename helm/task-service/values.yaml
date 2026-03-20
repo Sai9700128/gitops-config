@@ -68,7 +68,7 @@ env:
   DB_USER: admin
   DB_PASSWORD: rootpassword
   JWT_SECRET: mysecretkey
-  JWT_EXPIRES_IN: 3600
+  JWT_EXPIRES_IN: "1h"
   USER_SERVICE_URL: http://user-service:3001
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
