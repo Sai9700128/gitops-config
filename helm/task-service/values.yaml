@@ -67,7 +67,7 @@ env:
   DB_NAME: tasks_db
   DB_USER: admin
   DB_PASSWORD: rootpassword
-  JWT_SECRET: mysecretkey # ← Same secret
+  JWT_SECRET: mysecretkey
   JWT_EXPIRES_IN: "3600"
   USER_SERVICE_URL: http://user-service:3001
 
