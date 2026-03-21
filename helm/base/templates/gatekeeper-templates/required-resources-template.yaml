@@ -1,9 +1,9 @@
 apiVersion: templates.gatekeeper.sh/v1
 kind: ConstraintTemplate
 metadata:
-  name: k8sallowedregistries
+  name: k8srequiredresources
   annotations:
-    argocd.argoproj.io/sync-wave: "0"    
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   crd:
     spec:
@@ -17,17 +17,5 @@ spec:
         violation[{"msg": msg}] {
           container := input.review.object.spec.template.spec.containers[_]
           not container.resources.limits
-          msg := sprintf("Container '%v' must have resource limits defined", [container.name])
-        }
-
-        violation[{"msg": msg}] {
-          container := input.review.object.spec.template.spec.containers[_]
-          not container.resources.limits.memory
-          msg := sprintf("Container '%v' must have memory limit defined", [container.name])
-        }
-
-        violation[{"msg": msg}] {
-          container := input.review.object.spec.template.spec.containers[_]
-          not container.resources.limits.cpu
-          msg := sprintf("Container '%v' must have CPU limit defined", [container.name])
+          msg := sprintf("Container '%v' must have resource limits", [container.name])
         }

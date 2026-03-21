@@ -1,9 +1,9 @@
 apiVersion: templates.gatekeeper.sh/v1
 kind: ConstraintTemplate
 metadata:
-  name: k8sallowedregistries
+  name: k8srequiredlabels
   annotations:
-    argocd.argoproj.io/sync-wave: "0"    
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   crd:
     spec:
@@ -25,5 +25,5 @@ spec:
         violation[{"msg": msg}] {
           required := input.parameters.labels[_]
           not input.review.object.metadata.labels[required]
-          msg := sprintf("Resource must have required label: '%v'", [required])
+          msg := sprintf("Missing required label: '%v'", [required])
         }
