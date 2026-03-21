@@ -3,7 +3,7 @@ kind: ConstraintTemplate
 metadata:
   name: k8sallowedregistries
   annotations:
-    argocd.argoproj.io/sync-wave: "0"    
+    argocd.argoproj.io/sync-wave: "0"
 spec:
   crd:
     spec:
@@ -23,15 +23,9 @@ spec:
         package k8sallowedregistries
 
         violation[{"msg": msg}] {
-          container := input.review.object.spec.containers[_]
-          not registry_allowed(container.image)
-          msg := sprintf("Container '%v' uses image '%v' which is not from an allowed registry. Allowed: %v", [container.name, container.image, input.parameters.registries])
-        }
-
-        violation[{"msg": msg}] {
           container := input.review.object.spec.template.spec.containers[_]
           not registry_allowed(container.image)
-          msg := sprintf("Container '%v' uses image '%v' which is not from an allowed registry. Allowed: %v", [container.name, container.image, input.parameters.registries])
+          msg := sprintf("Container '%v' uses image '%v' not from allowed registry", [container.name, container.image])
         }
 
         registry_allowed(image) {

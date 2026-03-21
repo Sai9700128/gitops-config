@@ -1,0 +1,12 @@
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: K8sAllowedRegistries
+metadata:
+  name: only-allowed-registries
+spec:
+  match:
+    kinds:
+      - apiGroups: ["apps"]
+        kinds: ["Deployment"]
+  parameters:
+    registries:
+      - "599138915215.dkr.ecr.us-east-1.amazonaws.com"
