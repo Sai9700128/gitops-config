@@ -1,14 +1,12 @@
 apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sRequiredLabels
+kind: K8sAllowedRegistries
 metadata:
-  name: require-app-label
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
+  name: only-allowed-registries
 spec:
   match:
     kinds:
       - apiGroups: ["apps"]
         kinds: ["Deployment"]
   parameters:
-    labels:
-      - "app.kubernetes.io/name"
+    registries:
+      - "599138915215.dkr.ecr.us-east-1.amazonaws.com"

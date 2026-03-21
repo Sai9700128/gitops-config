@@ -1,11 +1,13 @@
 apiVersion: constraints.gatekeeper.sh/v1beta1
-kind: K8sNoLatestTag
+kind: K8sRequiredLabels
 metadata:
-  name: no-latest-tag
-  annotations:
-    argocd.argoproj.io/sync-wave: "1"
+  name: require-app-label
+
 spec:
   match:
     kinds:
       - apiGroups: ["apps"]
         kinds: ["Deployment"]
+  parameters:
+    labels:
+      - "app.kubernetes.io/name"
