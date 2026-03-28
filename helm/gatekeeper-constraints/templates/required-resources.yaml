@@ -8,3 +8,11 @@ spec:
     kinds:
       - apiGroups: ["apps"]
         kinds: ["Deployment"]
+    namespaces:
+      - "default"
+      # This below code is to exclude certain namespaces from this constraint, if you want to apply this constraint to all namespaces, just comment out the "namespaces" field and uncomment the "excludedNamespaces" field and add the namespaces you want to exclude.
+    # excludedNamespaces:
+    #   - kube-system
+    #   - argocd
+    #   - gatekeeper-system
+    #   - vault
