@@ -33,18 +33,16 @@ serviceAccount:
 
 # This is for setting Kubernetes Annotations to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-podAnnotations: {}
-  # vault.hashicorp.com/agent-inject: "true"
-  # vault.hashicorp.com/role: "user-service"
-  # vault.hashicorp.com/agent-inject-secret-config: "secret/taskflow/database"
-  # vault.hashicorp.com/agent-inject-template-config: |
-  #   {{ with secret "secret/data/taskflow/database" }}
-  #   DB_USER={{ .Data.data.username }}
-  #   DB_PASSWORD={{ .Data.data.password }}
-  #   {{ end }}
-  #   {{ with secret "secret/data/taskflow/jwt" }}
-  #   JWT_SECRET={{ .Data.data.secret }}
-  #   {{ end }}
+podAnnotations:
+  vault.hashicorp.com/agent-inject: "true"
+  vault.hashicorp.com/role: "task-service"
+  vault.hashicorp.com/agent-inject-secret-config: "secret/data/taskflow/config"
+  vault.hashicorp.com/agent-inject-template-config: |
+    {{ with secret "secret/data/taskflow/config" }}
+    DB_USER={{ .Data.data.DB_USER }}
+    DB_PASSWORD={{ .Data.data.DB_PASSWORD }}
+    JWT_SECRET={{ .Data.data.JWT_SECRET }}
+    {{ end }}
 # This is for setting Kubernetes Labels to a Pod.
 # For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
 podLabels: {}
@@ -76,9 +74,9 @@ env:
   DB_HOST: mysql
   DB_PORT: "3306"
   DB_NAME: tasks_db
-  DB_USER: admin
-  DB_PASSWORD: rootpassword
-  JWT_SECRET: mysecretkey
+  # DB_USER: admin
+  # DB_PASSWORD: rootpassword
+  # JWT_SECRET: mysecretkey
   JWT_EXPIRES_IN: "1h"
   USER_SERVICE_URL: http://user-service:3001
 
