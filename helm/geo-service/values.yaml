@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: 599138915215.dkr.ecr.us-east-1.amazonaws.com/taskflow-geo-service
   pullPolicy: Always
-  tag: "latest"
+  tag: 4d69cbaf3d37b1866b4448b991b6cd3a904f42ba
 
 imagePullSecrets: []
 nameOverride: ""
