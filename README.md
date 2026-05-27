@@ -1,44 +1,50 @@
 # TaskFlow GitOps Repository
 
-This repository contains Helm charts and ArgoCD applications for deploying the TaskFlow microservices application on Kubernetes.
+This repository contains Helm charts, ArgoCD ApplicationSets, and deployment configurations for the TaskFlow cloud-native microservices platform running on Kubernetes (EKS).
 
 ---
 
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│                         KUBERNETES CLUSTER                          │
-│                                                                     │
-│   [Internet Users]                                                  │
-│          │                                                          │
-│          ▼                                                          │
-│   ┌─────────────────┐                                              │
-│   │    frontend     │  ← LoadBalancer (public access)              │
-│   │    port: 80     │                                              │
-│   └────────┬────────┘                                              │
-│            │                                                        │
-│            ▼                                                        │
-│   ┌─────────────────┐    ┌─────────────────┐                       │
-│   │  user-service   │    │  task-service   │                       │
-│   │ ExternalName    │    │ ExternalName    │  ← Internal only      │
-│   │  port: 3001     │    │  port: 3002     │                       │
-│   └────────┬────────┘    └────────┬────────┘                       │
-│            │                      │                                 │
-│            └──────────┬───────────┘                                 │
-│                       ▼                                             │
-│            ┌─────────────────────┐                                  │
-│            │  mysql              │                                  │
-│            │  ExternalName       │  ← Points to AWS RDS            │
-│            └─────────────────────┘                                  │
-│                                                                     │
-└─────────────────────────────────────────────────────────────────────┘
-                        │
-                        ▼
-              ┌─────────────────────┐
-              │      AWS RDS        │
-              │  MySQL Database     │
-              └─────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                            KUBERNETES CLUSTER (EKS)                          │
+│                                                                              │
+│   [Internet Users]                                                           │
+│          │                                                                   │
+│          ▼                                                                   │
+│   ┌─────────────────┐                                                        │
+│   │    frontend      │  ← LoadBalancer (public access)                       │
+│   │    port: 80      │                                                       │
+│   └────────┬─────────┘                                                       │
+│            │                                                                  │
+│            ▼                                                                  │
+│   ┌─────────────────┐    ┌─────────────────┐                                 │
+│   │  user-service    │    │  task-service    │  ← Core services               │
+│   │  port: 3001      │    │  port: 3002      │                                │
+│   └────────┬─────────┘    └────────┬─────────┘                                │
+│            │                       │                                          │
+│            └───────────┬───────────┘                                          │
+│                        ▼                                                      │
+│             ┌─────────────────────┐                                           │
+│             │  mysql (RDS)        │  ← ExternalName → AWS RDS                 │
+│             └─────────────────────┘                                           │
+│                                                                               │
+│   ┌───────────────────────────────────────────────────────────────────────┐   │
+│   │              47 Microservices (via microservice-chart)                 │   │
+│   │                                                                       │   │
+│   │   Go (20)     Python (10)    Node.js (9)    Java (5)    Rust (3)     │   │
+│   │   ports:      ports:         ports:          ports:      ports:       │   │
+│   │   8081-8100   8101-8110      8111-8119       8120-8124   8125-8127   │   │
+│   │                                                                       │   │
+│   │   Deployed via ArgoCD ApplicationSet — auto-discovered from this repo │   │
+│   └───────────────────────────────────────────────────────────────────────┘   │
+│                                                                               │
+│   ┌───────────────────────────────────────────────────────────────────────┐   │
+│   │  Platform Services                                                    │   │
+│   │  ArgoCD │ Prometheus │ Grafana │ Loki │ Istio │ Vault │ Gatekeeper   │   │
+│   └───────────────────────────────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -46,23 +52,60 @@ This repository contains Helm charts and ArgoCD applications for deploying the T
 ## Repository Structure
 
 ```
-taskflow-gitops/
-├── charts/
-│   ├── frontend/           # React frontend application
+gitops-config/
+├── helm/
+│   ├── microservice-chart/          # Shared reusable Helm chart (all 47 services)
+│   │   ├── Chart.yaml
+│   │   ├── values.yaml              # Default values
+│   │   └── templates/
+│   │       ├── _helpers.tpl
+│   │       ├── deployment.yaml
+│   │       ├── service.yaml
+│   │       ├── serviceaccount.yaml
+│   │       └── hpa.yaml
+│   │
+│   ├── front-end/                   # Core — own full chart
 │   │   ├── Chart.yaml
 │   │   ├── values.yaml
 │   │   └── templates/
 │   │
-│   ├── user-service/       # User authentication microservice
+│   ├── user-service/                # Core — own full chart
 │   │   ├── Chart.yaml
 │   │   ├── values.yaml
 │   │   └── templates/
 │   │
-│   ├── task-service/       # Task management microservice
+│   ├── task-service/                # Core — own full chart
 │   │   ├── Chart.yaml
 │   │   ├── values.yaml
 │   │   └── templates/
+│   │
+│   ├── base/                        # Network policy (default deny)
+│   │   ├── Chart.yaml
+│   │   ├── values.yaml
+│   │   └── templates/
+│   │       └── default-deny.yaml
+│   │
+│   ├── gatekeeper-constraints/      # OPA Gatekeeper constraints
+│   │   ├── Chart.yaml
+│   │   └── templates/
+│   │
+│   ├── gatekeeper-templates.yaml    # OPA Gatekeeper templates
+│   │
+│   ├── sso-service/                 # Go — per-service values only
+│   │   └── values.yaml
+│   ├── session-service/
+│   │   └── values.yaml
+│   ├── payment-service/             # Java — per-service values only
+│   │   └── values.yaml
+│   ├── email-service/               # Python — per-service values only
+│   │   └── values.yaml
+│   ├── notification-service/        # Node.js — per-service values only
+│   │   └── values.yaml
+│   ├── encryption-service/          # Rust — per-service values only
+│   │   └── values.yaml
+│   └── ... (47 service dirs total, each with only values.yaml)
 │
+├── applicationset.yaml              # ArgoCD ApplicationSet — auto-discovers all services
 └── README.md
 ```
 
@@ -70,21 +113,92 @@ taskflow-gitops/
 
 ## Services Overview
 
-| Service | Type | Port | Description |
-|---------|------|------|-------------|
-| **frontend** | LoadBalancer | 80 | React application - public access |
-| **user-service** | ClusterIP | 3001 | User authentication API - internal |
-| **task-service** | ClusterIP | 3002 | Task management API - internal |
+### Core Services (Own Helm Charts)
+
+| Service | Language | Type | Port | Description |
+|---------|----------|------|------|-------------|
+| **frontend** | TypeScript/React | LoadBalancer | 80 | React application — public access |
+| **user-service** | Node.js | ClusterIP | 3001 | User authentication API — internal |
+| **task-service** | Node.js | ClusterIP | 3002 | Task management API — internal |
+
+### Microservices (Shared Chart — `microservice-chart`)
+
+| Group | Services | Language | Ports | Purpose |
+|-------|----------|----------|-------|---------|
+| **Auth & Identity** | sso-service, session-service, rbac-service, token-service | Go | 8081-8083, 8098 | Authentication, sessions, roles, tokens |
+| **API Infrastructure** | api-gateway-service, rate-limiter-service, request-validator, circuit-breaker-service, idempotency-service | Go | 8084-8085, 8095-8097 | Traffic routing, throttling, validation, resilience |
+| **Platform Infrastructure** | config-service, cache-service, scheduler-service, service-registry, event-bus-service, queue-processor | Go | 8086-8088, 8092, 8094, 8100 | Configuration, caching, scheduling, messaging |
+| **Observability** | health-aggregator, metric-collector, audit-log-service, feature-flag-service, webhook-service | Go | 8089-8091, 8093, 8099 | Health checks, metrics, audit trails, feature flags |
+| **Data & Intelligence** | email-service, analytics-service, reporting-service, search-service, recommendation-service, ml-inference-service, data-pipeline-service, sentiment-service, export-service, geo-service | Python | 8101-8110 | Email, analytics, ML, search, data processing |
+| **User Interaction** | notification-service, chat-service, file-upload-service, template-service, comment-service, activity-feed-service, realtime-service, markdown-service, localization-service | Node.js | 8111-8119 | Notifications, chat, files, real-time updates |
+| **Billing & Finance** | payment-service, invoice-service, subscription-service, billing-service, compliance-service | Java | 8120-8124 | Payments, invoicing, subscriptions, compliance |
+| **Performance-Critical** | encryption-service, image-processor, compression-service | Rust | 8125-8127 | Encryption, image processing, compression |
+
+---
+
+## How It Works
+
+### Shared Helm Chart Pattern
+
+The 47 microservices share a single Helm chart (`microservice-chart/`) instead of maintaining 47 separate charts. Each service only has a `values.yaml` that overrides what's unique:
+
+```yaml
+# helm/sso-service/values.yaml
+image:
+  repository: <ECR_REGISTRY>/taskflow-sso-service
+  tag: "abc123"
+
+service:
+  port: 8081
+```
+
+Everything else (deployment spec, probes, resources, service account) comes from the shared chart's defaults.
+
+### ArgoCD ApplicationSet
+
+A single `applicationset.yaml` auto-discovers all service directories under `helm/` and creates ArgoCD Applications for each one. Adding a new service requires zero ArgoCD configuration — just add a `values.yaml` directory.
+
+### CI/CD Pipeline
+
+The app repo contains two GitHub Actions workflows:
+
+**`ci-test.yaml`** (triggers on PR):
+
+1. Detects which services changed via `git diff`
+2. Spins up parallel matrix jobs for each changed service
+3. Auto-detects language and runs appropriate tests
+4. PR blocked until all tests pass
+
+**`ci-build.yaml`** (triggers on merge to main):
+
+1. Detects which services changed
+2. Builds Docker images in parallel
+3. Pushes to ECR
+4. Updates image tags in this GitOps repo
+5. ArgoCD detects the change and deploys
+
+### Infrastructure (Terraform)
+
+Terraform provisions per-service AWS resources using `for_each`:
+
+- ECR repository per service
+- CloudWatch log group per service
+- Lifecycle policies for image cleanup
+
+One module definition, one loop, 50 services provisioned.
 
 ---
 
 ## Prerequisites
 
-- Kubernetes cluster (EKS recommended)
-- Helm 3.x installed
+- Kubernetes cluster (EKS)
+- Helm 3.x
 - ArgoCD installed in cluster
 - AWS RDS MySQL instance
-- Docker images pushed to registry (GHCR/ECR/DockerHub)
+- ECR repositories (provisioned via Terraform)
+- HashiCorp Vault (for secrets management)
+- Istio service mesh
+- Prometheus, Grafana, Loki (observability stack)
 
 ---
 
@@ -93,301 +207,124 @@ taskflow-gitops/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/taskflow-gitops.git
-cd taskflow-gitops
+git clone https://github.com/YOUR_USERNAME/gitops-config.git
+cd gitops-config
 ```
 
-### 2. Update Configuration
-
-Update `values.yaml` for each chart with your settings:
-
-**charts/frontend/values.yaml:**
-
-```yaml
-image:
-  repository: ghcr.io/YOUR_USERNAME/taskflow-frontend
-  tag: "latest"
-
-service:
-  type: LoadBalancer
-  port: 80
-```
-
-**charts/user-service/values.yaml:**
-
-```yaml
-image:
-  repository: ghcr.io/YOUR_USERNAME/taskflow-user-service
-  tag: "latest"
-
-service:
-  type: ClusterIP
-  port: 3001
-
-env:
-  NODE_ENV: production
-  PORT: "3001"
-  DB_HOST: mysql
-  DB_PORT: "3306"
-  DB_NAME: users_db
-  DB_USER: admin
-  DB_PASSWORD: your-password
-  JWT_SECRET: your-jwt-secret
-  JWT_EXPIRES_IN: "24h"
-```
-
-**charts/task-service/values.yaml:**
-
-```yaml
-image:
-  repository: ghcr.io/YOUR_USERNAME/taskflow-task-service
-  tag: "latest"
-
-service:
-  type: ClusterIP
-  port: 3002
-
-env:
-  NODE_ENV: production
-  PORT: "3002"
-  DB_HOST: mysql
-  DB_PORT: "3306"
-  DB_NAME: tasks_db
-  DB_USER: admin
-  DB_PASSWORD: your-password
-  USER_SERVICE_URL: http://user-service:3001
-  JWT_SECRET: your-jwt-secret
-```
-
-**charts/mysql/values.yaml:**
-
-```yaml
-service:
-  externalName: your-rds-endpoint.region.rds.amazonaws.com
-```
-
-### 3. Deploy with ArgoCD
+### 2. Deploy Core Services
 
 ```bash
-# Create ArgoCD applications
-kubectl apply -f argocd/
+# Deploy network policies
+helm install base ./helm/base -n taskflow
 
-# Verify applications
+# Deploy core services
+helm install frontend ./helm/front-end -n taskflow
+helm install user-service ./helm/user-service -n taskflow
+helm install task-service ./helm/task-service -n taskflow
+```
+
+### 3. Deploy ApplicationSet
+
+```bash
+# This auto-discovers and deploys all 47 microservices
+kubectl apply -f applicationset.yaml -n argocd
+```
+
+### 4. Verify
+
+```bash
+# Check all ArgoCD applications
 kubectl get applications -n argocd
-```
 
-### 4. Verify Deployment
+# Check all pods
+kubectl get pods -n taskflow
 
-```bash
-# Check pods
-kubectl get pods
-
-# Check services
-kubectl get svc
-
-# Get frontend URL
-kubectl get svc frontend
+# Check all services
+kubectl get svc -n taskflow
 ```
 
 ---
 
-## Manual Helm Deployment (Without ArgoCD)
+## Adding a New Service
 
-```bash
-# Create namespace
-kubectl create namespace taskflow
+Adding a new service to the platform requires three steps across two repos:
 
-# Deploy MySQL ExternalName service first
-helm install mysql ./charts/mysql -n taskflow
+**App repo:**
 
-# Deploy backend services
-helm install user-service ./charts/user-service -n taskflow
-helm install task-service ./charts/task-service -n taskflow
+1. Create service directory with code + Dockerfile
 
-# Deploy frontend
-helm install frontend ./charts/frontend -n taskflow
-```
+**GitOps repo:**
+2. Add `helm/<service-name>/values.yaml`
+
+**Terraform:**
+3. Add one line to `terraform.tfvars`: `"new-service" = { port = 8128 }`
+
+No changes needed to CI workflows, Helm templates, or ArgoCD configuration. The ApplicationSet auto-discovers the new directory, CI auto-detects changes, and Terraform provisions the ECR repo.
 
 ---
 
 ## Useful Commands
 
-### Check Deployment Status
+### ArgoCD
 
 ```bash
-# All pods
-kubectl get pods
-
-# All services
-kubectl get svc
-
-# Pod logs
-kubectl logs -l app.kubernetes.io/name=user-service
-kubectl logs -l app.kubernetes.io/name=task-service
-kubectl logs -l app.kubernetes.io/name=frontend
-
-# Describe pod (for debugging)
-kubectl describe pod <pod-name>
-```
-
-### Helm Commands
-
-```bash
-# Test chart rendering
-helm template frontend ./charts/frontend
-
-# Install chart
-helm install frontend ./charts/frontend
-
-# Upgrade chart
-helm upgrade frontend ./charts/frontend
-
-# Uninstall chart
-helm uninstall frontend
-
-# List releases
-helm list
-```
-
-### ArgoCD Commands
-
-```bash
-# List applications
+# List all applications
 kubectl get applications -n argocd
 
-# Sync application
-argocd app sync frontend
+# Sync a specific service
+argocd app sync sso-service
 
-# Refresh application
-argocd app refresh frontend
+# Sync all applications
+argocd app sync -l app.kubernetes.io/instance=taskflow-services
 
-# Delete application
-kubectl delete application frontend -n argocd
+# Check app health
+argocd app get sso-service
 ```
 
----
-
-## Environment Variables
-
-### user-service
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| NODE_ENV | Environment | production |
-| PORT | Service port | 3001 |
-| DB_HOST | Database host | mysql |
-| DB_PORT | Database port | 3306 |
-| DB_NAME | Database name | users_db |
-| DB_USER | Database user | admin |
-| DB_PASSWORD | Database password | *** |
-| JWT_SECRET | JWT signing key | *** |
-| JWT_EXPIRES_IN | Token expiry | 24h |
-
-### task-service
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| NODE_ENV | Environment | production |
-| PORT | Service port | 3002 |
-| DB_HOST | Database host | mysql |
-| DB_PORT | Database port | 3306 |
-| DB_NAME | Database name | tasks_db |
-| DB_USER | Database user | admin |
-| DB_PASSWORD | Database password | *** |
-| USER_SERVICE_URL | User service endpoint | <http://user-service:3001> |
-| JWT_SECRET | JWT signing key | *** |
-
-### frontend
-
-| Variable | Description | Example |
-|----------|-------------|---------|
-| VITE_API_URL | Backend API URL | <http://user-service:3001> |
-
----
-
-## Troubleshooting
-
-### Pods in CrashLoopBackOff
+### Helm
 
 ```bash
-# Check logs
-kubectl logs <pod-name> --previous
+# Test shared chart rendering for a specific service
+helm template sso-service ./helm/microservice-chart -f ./helm/sso-service/values.yaml
 
-# Common causes:
-# - Database not accessible
-# - Missing environment variables
-# - Wrong image tag
+# List all releases
+helm list -n taskflow
 ```
 
-### Service Not Accessible
+### Debugging
 
 ```bash
-# Check service exists
-kubectl get svc
+# Check pod logs
+kubectl logs -l app.kubernetes.io/name=sso-service -n taskflow
 
-# Check endpoints
-kubectl get endpoints <service-name>
+# Describe failing pod
+kubectl describe pod <pod-name> -n taskflow
 
-# Test from inside cluster
-kubectl run test --rm -it --image=busybox -- wget -qO- http://user-service:3001/health
-```
-
-### ArgoCD App Not Syncing
-
-```bash
-# Check app status
-kubectl describe application <app-name> -n argocd
-
-# Force refresh
-argocd app refresh <app-name> --hard-refresh
-
-# Check Helm template
-helm template <chart-name> ./charts/<chart-name>
-```
-
-### Database Connection Issues
-
-```bash
-# Verify ExternalName service
-kubectl get svc mysql -o yaml
-
-# Test DNS resolution from pod
-kubectl run test --rm -it --image=busybox -- nslookup mysql
-
-# Check RDS security groups allow traffic from EKS
+# Test service health from inside cluster
+kubectl run test --rm -it --image=busybox -n taskflow -- wget -qO- http://sso-service:8081/health
 ```
 
 ---
 
-## Security Notes
+## Security
 
-⚠️ **Important:** For production:
-
-1. **Never commit secrets** - Use HashiCorp Vault, AWS Secrets Manager, or Kubernetes Secrets
-2. **Use HTTPS** - Configure Ingress with TLS
-3. **Network Policies** - Restrict pod-to-pod communication
-4. **RBAC** - Limit ArgoCD and service account permissions
-5. **Image Scanning** - Scan images for vulnerabilities
-
----
-
-## Future Enhancements
-
-- [ ] HashiCorp Vault integration for secrets
-- [ ] Ingress with TLS termination
-- [ ] Horizontal Pod Autoscaler (HPA)
-- [ ] Prometheus/Grafana monitoring
-- [ ] Network Policies
-- [ ] Pod Disruption Budgets
+- **HashiCorp Vault** — Centralized secrets management
+- **OPA Gatekeeper** — Policy-as-code enforcement
+- **Istio mTLS** — Service-to-service encryption
+- **Network Policies** — Default deny with explicit allow rules
+- **Trivy** — Container image scanning in CI
+- **IAM Roles** — Least-privilege per service
 
 ---
 
-## Contributing
+## Observability
 
-1. Create a feature branch
-2. Make changes
-3. Test with `helm template`
-4. Submit PR
+- **Prometheus** — Metrics collection and alerting rules
+- **Grafana** — Dashboards for platform health
+- **Loki** — Log aggregation
+- **Tempo** — Distributed tracing
+- **Kubecost** — Cost monitoring
+- **CloudWatch** — Per-service log groups
 
 ---
 
