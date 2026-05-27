@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: 599138915215.dkr.ecr.us-east-1.amazonaws.com/taskflow-encryption-service
   pullPolicy: Always
-  tag: "latest"
+  tag: 1ed5bcd704184139b7b113760a9f83697f9d960e
 
 imagePullSecrets: []
 nameOverride: ""
