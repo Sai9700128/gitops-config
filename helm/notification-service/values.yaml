@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: 599138915215.dkr.ecr.us-east-1.amazonaws.com/taskflow-notification-service
   pullPolicy: Always
-  tag: 132faaece2d84b124c9d5a98b77016e0ebdeee68
+  tag: 61dd889ff414a77d515b2a019816fb168ece5d42
 
 imagePullSecrets: []
 nameOverride: ""
