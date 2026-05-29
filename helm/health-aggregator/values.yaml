@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: 599138915215.dkr.ecr.us-east-1.amazonaws.com/taskflow-health-aggregator
   pullPolicy: Always
-  tag: "latest"
+  tag: 61dd889ff414a77d515b2a019816fb168ece5d42
 
 imagePullSecrets: []
 nameOverride: ""
