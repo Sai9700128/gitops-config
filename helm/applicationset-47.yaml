@@ -1,0 +1,47 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+    name: taskflow-microservices
+    namespace: argocd
+spec:
+    generators:
+        - git:
+              repoURL: https://github.com/Sai9700128/gitops-config.git
+              revision: HEAD
+              directories:
+                  - path: helm/*
+                  # Exclude non-service directories
+                  - path: helm/base
+                    exclude: true
+                  - path: helm/microservice-chart
+                    exclude: true
+                  - path: helm/gatekeeper-constraints
+                    exclude: true
+                  - path: helm/front-end
+                    exclude: true
+                  - path: helm/user-service
+                    exclude: true
+                  - path: helm/task-service
+                    exclude: true
+    template:
+        metadata:
+            name: "{{path.basename}}"
+        spec:
+            project: default
+            source:
+                repoURL: https://github.com/Sai9700128/gitops-config.git
+                targetRevision: HEAD
+                path: helm/microservice-chart
+                helm:
+                    releaseName: "{{path.basename}}"
+                    valueFiles:
+                        - ../{{path.basename}}/values.yaml
+            destination:
+                server: https://kubernetes.default.svc
+                namespace: taskflow
+            syncPolicy:
+                automated:
+                    prune: true
+                    selfHeal: true
+                syncOptions:
+                    - CreateNamespace=true

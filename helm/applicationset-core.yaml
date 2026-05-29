@@ -1,0 +1,31 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+    name: taskflow-core-services
+    namespace: argocd
+spec:
+    generators:
+        - list:
+              elements:
+                  - name: front-end
+                  - name: user-service
+                  - name: task-service
+                  - name: gatekeeper-constraints
+    template:
+        metadata:
+            name: "{{name}}"
+        spec:
+            project: default
+            source:
+                repoURL: https://github.com/Sai9700128/gitops-config.git
+                targetRevision: HEAD
+                path: helm/{{name}}
+            destination:
+                server: https://kubernetes.default.svc
+                namespace: taskflow
+            syncPolicy:
+                automated:
+                    prune: true
+                    selfHeal: true
+                syncOptions:
+                    - CreateNamespace=true
